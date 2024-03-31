@@ -166,8 +166,8 @@ namespace {
 			FreqMin = 0,
 			FreqMax = 40000,
 			FreqRangeTotal = FreqMax,
-			GainMin = -100,
-			GainMax = 100,
+			GainMin = -10000,
+			GainMax = 10000,
 			GainRangeTotal = GainMax - GainMin
 		};
 
@@ -266,7 +266,7 @@ namespace {
 				bool enabled;
 				dsp_iir::parse_preset(p_freq, p_gain, p_type,p_qual, enabled, preset2);
 				slider_freq.SetPos(p_freq);
-				slider_gain.SetPos(p_gain);
+				slider_gain.SetPos(p_gain*100);
 				CWindow w = GetDlgItem(IDC_IIRTYPE1);
 				::SendMessage(w, CB_SETCURSEL, p_type, 0);
 				BOOL type1 = (p_type != 10);
@@ -337,7 +337,7 @@ namespace {
 		{
 			CWindow w;
 			p_freq = slider_freq.GetPos();
-			p_gain = slider_gain.GetPos();
+			p_gain = slider_gain.GetPos()/100.;
 			p_type = SendDlgItemMessage(IDC_IIRTYPE, CB_GETCURSEL);
 			{
 				dsp_preset_impl preset;
@@ -356,7 +356,7 @@ namespace {
 		{
 			CWindow w;
 			p_freq = slider_freq.GetPos();
-			p_gain = slider_gain.GetPos();
+			p_gain = slider_gain.GetPos()/100.;
 			p_type = SendDlgItemMessage(IDC_IIRTYPE, CB_GETCURSEL);
 			if (LOWORD(scrollid) != SB_THUMBTRACK)
 			{

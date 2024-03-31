@@ -46,6 +46,20 @@ namespace {
 	const float VIBRATO_FREQUENCY_MAX_HZ = 14;
 	const float VIBRATO_DEPTH_DEFAULT_PERCENT = 50;
 
+	static const double _kaiser8[8] =
+	{
+	   0.41778693317814,
+	   0.64888025049173,
+	   0.83508562409944,
+	   0.93887857733412,
+	   0.93887857733412,
+	   0.83508562409944,
+	   0.64888025049173,
+	   0.41778693317814
+	};
+#define PI 3.1415926536
+#define sinc(x) (sin(PI * (x)) / (PI * (x)))
+
 	__forceinline audio_sample getSampleHermite4p3o(audio_sample x, audio_sample *y)
 	{
 		static audio_sample c0, c1, c2, c3;
@@ -57,6 +71,23 @@ namespace {
 		return ((c3*x + c2)*x + c1)*x + c0;
 	}
 
+	__forceinline audio_sample sinc_interpolate(audio_sample frac, audio_sample* buffer)
+	{
+		audio_sample out = 0;
+		out = buffer[0] * sinc(-3.0 - frac) * _kaiser8[0];
+		out += buffer[1] * sinc(-2.0 - frac) * _kaiser8[1];
+		out += buffer[2] * sinc(-1.0 - frac) * _kaiser8[2];
+		if (frac < 1e-6)
+			out += buffer[3] * _kaiser8[3];
+		else
+			out += buffer[3] * sinc(-frac) * _kaiser8[3];
+		out += buffer[4] * sinc(1.0 - frac) * _kaiser8[4];
+		out += buffer[5] * sinc(2.0 - frac) * _kaiser8[5];
+		out += buffer[6] * sinc(3.0 - frac) * _kaiser8[6];
+		out += buffer[7] * sinc(4.0 - frac) * _kaiser8[7];
+		return out;
+	}
+
 	class Vibrato
 	{
 	private:
@@ -64,7 +95,7 @@ namespace {
 		float samplerate;
 		int phase;
 		float depth;
-		static const int additionalDelay = 3;
+		static const int additionalDelay = 7;
 		audio_sample*  buffer;
 		audio_sample *table;
 		int writeIndex;
@@ -106,7 +137,7 @@ namespace {
 			while (fReadIndex >= size)fReadIndex -= size;
 			int iPart = (int)fReadIndex; // integer part of the delay
 			audio_sample fPart = fReadIndex - iPart; // fractional part of the delay
-			audio_sample value = getSampleHermite4p3o(fPart, &(buffer[iPart]));
+			audio_sample value = sinc_interpolate(fPart, &(buffer[iPart]));
 			buffer[writeIndex] = in;
 			if (writeIndex < additionalDelay) {
 				buffer[size + writeIndex] = in;

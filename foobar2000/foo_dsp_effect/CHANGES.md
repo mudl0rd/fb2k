@@ -1,3 +1,10 @@
+ 0.50:
+ * Updated to latest SDK
+ * Fixed IIR DSP manager dialog
+ * Added cubic/sinc interpolation to chorus and vibrato
+ * Fixed buffer issues in reverb
+
+
 0.43:
 * Tightened checks on metadb_handle_ptr being used for pitch shift metadata.
 

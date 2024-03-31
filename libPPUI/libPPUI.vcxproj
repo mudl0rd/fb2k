@@ -39,6 +39,7 @@
     <ProjectGuid>{7729EB82-4069-4414-964B-AD399091A03F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>libPPUI</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -352,14 +353,17 @@
     <ClInclude Include="CPropVariant.h" />
     <ClInclude Include="CWindowCreateAndDelete.h" />
     <ClInclude Include="CDialogResizeHelper.h" />
+    <ClInclude Include="DarkMode-CHyperLink.h" />
     <ClInclude Include="DarkMode.h" />
     <ClInclude Include="DarkModeEx.h" />
+    <ClInclude Include="EditBoxFixes.h" />
     <ClInclude Include="gdi-types-portable.h" />
     <ClInclude Include="gdiplus-helpers-webp.h" />
     <ClInclude Include="gdiplus_helpers.h" />
     <ClInclude Include="GDIUtils.h" />
     <ClInclude Include="gesture.h" />
     <ClInclude Include="hookWindowMessages.h" />
+    <ClInclude Include="HyperLinkCtrl.h" />
     <ClInclude Include="IDataObjectUtils.h" />
     <ClInclude Include="ImageEncoder.h" />
     <ClInclude Include="ImplementOnFinalMessage.h" />
@@ -397,6 +401,7 @@
     <ClCompile Include="CDialogResizeHelper.cpp" />
     <ClCompile Include="CPowerRequest.cpp" />
     <ClCompile Include="DarkMode.cpp" />
+    <ClCompile Include="EditBoxFix.cpp" />
     <ClCompile Include="gdiplus_helpers.cpp" />
     <ClCompile Include="GDIUtils.cpp" />
     <ClCompile Include="IDataObjectUtils.cpp" />
@@ -419,12 +424,23 @@
     <ClCompile Include="TypeFind.cpp" />
     <ClCompile Include="win32_op.cpp" />
     <ClCompile Include="win32_utility.cpp" />
+    <ClCompile Include="wtl-pp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="libPPUI-license.txt" />
     <Text Include="libPPUI-readme.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\foobar2000\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets" Condition="Exists('..\foobar2000\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\foobar2000\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\foobar2000\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets'))" />
+  </Target>
 </Project>

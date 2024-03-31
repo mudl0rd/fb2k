@@ -45,10 +45,26 @@ namespace {
 #define ROUND(n)		((int)((double)(n)+0.5))
 #define PIN(n,min,max) ((n) > (max) ? max : ((n) < (min) ? (min) : (n)))
 
+	static const double _kaiser8[8] =
+	{
+	   0.41778693317814,
+	   0.64888025049173,
+	   0.83508562409944,
+	   0.93887857733412,
+	   0.93887857733412,
+	   0.83508562409944,
+	   0.64888025049173,
+	   0.41778693317814
+	};
+#define PI 3.1415926536
+#define sinc(x) (sin(PI * (x)) / (PI * (x)))
+
 	class Chorus
 	{
 	private:
-		audio_sample old[CHORUS_MAX_DELAY];
+		#define interp_points_sinc 7
+#define interp_points_cubic 3
+		audio_sample old[CHORUS_MAX_DELAY+interp_points_sinc];
 		unsigned old_ptr;
 		float delay_;
 		float depth_;
@@ -61,6 +77,35 @@ namespace {
 		unsigned lfo_period;
 		float lfo_freq;
 		float drywet;
+		int WriteIndex;
+
+		__forceinline audio_sample sinc_interpolate(audio_sample frac, audio_sample* buffer)
+		{
+				audio_sample out = 0;
+				out = buffer[0] * sinc(-3.0 - frac) * _kaiser8[0];
+				out += buffer[1] * sinc(-2.0 - frac) * _kaiser8[1];
+				out += buffer[2] * sinc(-1.0 - frac) * _kaiser8[2];
+				if (frac < 1e-6)
+					out += buffer[3] * _kaiser8[3];
+				else
+					out += buffer[3] * sinc(-frac) * _kaiser8[3];
+				out += buffer[4] * sinc(1.0 - frac) * _kaiser8[4];
+				out += buffer[5] * sinc(2.0 - frac) * _kaiser8[5];
+				out += buffer[6] * sinc(3.0 - frac) * _kaiser8[6];
+				out += buffer[7] * sinc(4.0 - frac) * _kaiser8[7];
+				return out;
+		}
+
+		__forceinline audio_sample getSampleHermite4p3o(audio_sample x, audio_sample* y)
+		{
+			static audio_sample c0, c1, c2, c3;
+			// 4-point, 3rd-order Hermite (x-form)
+			c0 = y[1];
+			c1 = (1.0 / 2.0) * (y[2] - y[0]);
+			c2 = (y[0] - (5.0 / 2.0) * y[1]) + (2.0 * y[2] - (1.0 / 2.0) * y[3]);
+			c3 = (1.0 / 2.0) * (y[3] - y[0]) + (3.0 / 2.0) * (y[1] - y[2]);
+			return ((c3 * x + c2) * x + c1) * x + c0;
+		}
 
 	public:
 		Chorus()
@@ -73,7 +118,7 @@ namespace {
 
 		void init(float delay, float depth, float lfo_freq, float drywet, int rate)
 		{
-			memset(old, 0, CHORUS_MAX_DELAY * sizeof(audio_sample));
+			memset(old, 0, CHORUS_MAX_DELAY + 3 * sizeof(audio_sample));
 			old_ptr = 0;
 			delay_ = delay / 1000.0f;
 			depth_ = depth / 1000.0f;
@@ -104,20 +149,19 @@ namespace {
 			old[old_ptr] = in_smp;
 			audio_sample delay2 = this->delay_ + depth_ * sin((2.0 * M_PI * lfo_ptr++) / lfo_period);
 			delay2 *= rate;
+			delay2 += interp_points_sinc;
 			if (lfo_ptr >= lfo_period)
 				lfo_ptr = 0;
 			unsigned delay_int = (unsigned)delay2;
 			if (delay_int >= CHORUS_MAX_DELAY - 1)
 				delay_int = CHORUS_MAX_DELAY - 2;
 			audio_sample delay_frac = delay2 - delay_int;
-
-			audio_sample l_a = old[(old_ptr - delay_int - 0) & CHORUS_DELAY_MASK];
-			audio_sample l_b = old[(old_ptr - delay_int - 1) & CHORUS_DELAY_MASK];
-			/* Lerp introduces aliasing of the chorus component,
-			* but doing full polyphase here is probably overkill. */
-			audio_sample chorus_l = l_a * (1.0f - delay_frac) + l_b * delay_frac;
-			audio_sample smp = mix_dry * in_smp + mix_wet * chorus_l;
+			audio_sample value = sinc_interpolate(delay_frac, &(old[(old_ptr-delay_int)&CHORUS_DELAY_MASK]));
+			old[old_ptr] = in;
+			if (old_ptr <interp_points_sinc) 
+				old[CHORUS_MAX_DELAY + old_ptr] = in;
 			old_ptr = (old_ptr + 1) & CHORUS_DELAY_MASK;
+			audio_sample smp = mix_dry * in_smp + mix_wet * value;
 			return smp;
 		}
 	};

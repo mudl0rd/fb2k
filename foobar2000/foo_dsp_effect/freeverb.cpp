@@ -93,7 +93,7 @@ void revmodel::init(int srate,bool stereo)
 	static const int comb_lengths[8] = { 1116,1188,1277,1356,1422,1491,1557,1617 };
 	static const int allpass_lengths[4] = { 225,341,441,556 };
 	int stereosep = stereo ? 23 : 0;
-	int r = (srate * (1.0 / 44100.0));
+	double r = (srate * (1.0 / 44100.0));
 	if (bufcomb) {
 		for (int c = 0; c < num_comb; ++c)
 		{
@@ -105,10 +105,12 @@ void revmodel::init(int srate,bool stereo)
 	}
 
    bufcomb= new audio_sample *[num_comb];
-   for (int c = 0; c < num_comb; ++c)
+   for (int c = 0; c < num_comb; c++)
    {
-	   bufcomb[c] = new audio_sample[r*(comb_lengths[c]+ stereosep)]();
-	   combL[c].setbuffer(bufcomb[c], r*(comb_lengths[c]+ stereosep));
+	   int sz = (size_t)(r * (comb_lengths[c] + stereosep) + .5);
+	   bufcomb[c] = new audio_sample[sz]();
+	   combL[c].setbuffer(bufcomb[c], sz);
+	   combL[c].setfeedback(0.5f);
    }
 
    if (bufallpass) {
@@ -121,10 +123,11 @@ void revmodel::init(int srate,bool stereo)
 	   bufallpass = NULL;
    }
    bufallpass = new audio_sample *[num_allpass];
-   for (int a = 0;a< num_allpass; ++a)
+   for (int a = 0;a< num_allpass; a++)
    {
-	   bufallpass[a] = new audio_sample[r*(allpass_lengths[a]+stereosep)]();
-	   allpassL[a].setbuffer(bufallpass[a], (r*(allpass_lengths[a]+ stereosep)));
+	   int sz = (size_t)(r * (allpass_lengths[a] + stereosep) + .5);
+	   bufallpass[a] = new audio_sample[sz]();
+	   allpassL[a].setbuffer(bufallpass[a], sz);
 	   allpassL[a].setfeedback(0.5f);
    }
 	setwet(initialwet);

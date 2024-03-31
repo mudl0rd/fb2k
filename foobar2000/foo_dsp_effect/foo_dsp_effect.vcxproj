@@ -105,10 +105,10 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Template|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Template|x64'" />
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\codecrack\wtl;C:\code\working\foobar2000\foobar2000\foobar2000_component_client;C:\code\working\foobar2000\libPPUI;C:\code\working\foobar2000\pfc;C:\code\working\foobar2000\foobar2000\SDK;C:\code\working\foobar2000\foobar2000\shared;C:\code\working\foobar2000\foobar2000\helpers;C:\code\working\foobar2000;C:\code\working\foobar2000\foobar2000;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\codecrack\wtl;C:\code\working\foobar2000\foobar2000\foobar2000_component_client;C:\code\working\foobar2000\libPPUI;C:\code\working\foobar2000\pfc;C:\code\working\foobar2000\foobar2000\SDK;C:\code\working\foobar2000\foobar2000\shared;C:\code\working\foobar2000\foobar2000\helpers;C:\code\working\foobar2000;C:\code\working\foobar2000\foobar2000;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">D:\codecrak\working_minerepos\fb2k\foobar2000\foobar2000_component_client;D:\codecrak\working_minerepos\fb2k;D:\codecrak\working_minerepos\fb2k\foobar2000\SDK;D:\codecrak\working_minerepos\fb2k\foobar2000\shared;D:\codecrak\working_minerepos\fb2k\foobar2000\helpers;D:\codecrak\working_minerepos\fb2k\foobar2000;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\codecrak\working_minerepos\fb2k;D:\codecrak\working_minerepos\fb2k\foobar2000;D:\codecrak\working_minerepos\fb2k\foobar2000\foobar2000_component_client;D:\codecrak\working_minerepos\fb2k\foobar2000\SDK;D:\codecrak\working_minerepos\fb2k\foobar2000\shared;D:\codecrak\working_minerepos\fb2k\foobar2000\helpers;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\code\3rdparty-deps\wtl;C:\code\working\foobar2000;C:\code\working\foobar2000\foobar2000;C:\code\working\foobar2000\foobar2000\SDK;C:\code\working\foobar2000\foobar2000\shared;C:\code\working\foobar2000\foobar2000\helpers;C:\code\working\foobar2000\foobar2000\foobar2000_component_client;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\code\3rdparty-deps\wtl;C:\code\working\foobar2000;C:\code\working\foobar2000\foobar2000;C:\code\working\foobar2000\foobar2000\SDK;C:\code\working\foobar2000\foobar2000\shared;C:\code\working\foobar2000\foobar2000\helpers;C:\code\working\foobar2000\foobar2000\foobar2000_component_client;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\codecrak\working_minerepos\fb2k;D:\codecrak\working_minerepos\fb2k\foobar2000;D:\codecrak\working_minerepos\fb2k\foobar2000\SDK;D:\codecrak\working_minerepos\fb2k\foobar2000\shared;D:\codecrak\working_minerepos\fb2k\foobar2000\helpers;D:\codecrak\working_minerepos\fb2k\foobar2000_component_client;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <SourcePath>C:\codecrack\wtl;$(SourcePath)</SourcePath>
@@ -155,7 +155,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>..\shared\shared-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>C:\apps\fb2kx64\user-components\foo_dsp_effect.dll</OutputFile>
+      <OutputFile>C:\apps\foobar2000-test\components\foo_dsp_effect.dll</OutputFile>
       <AdditionalLibraryDirectories>..\shared;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -176,7 +176,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -209,13 +209,13 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalOptions>/Zi %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>..\shared\shared-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>C:\apps\foobar2000\user-components\foo_dsp_effect.dll</OutputFile>
+      <OutputFile>C:\apps\foobar2000-test\components\foo_dsp_effect.dll</OutputFile>
       <AdditionalLibraryDirectories>..\shared;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
