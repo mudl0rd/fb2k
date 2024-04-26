@@ -1,17 +1,21 @@
+#include "../SDK/foobar2000.h"
 #include <math.h>
-#include "../helpers/foobar2000+atl.h"
-#include <coreDarkMode.h>
-#include "../../libPPUI/win32_utility.h"
-#include "../../libPPUI/win32_op.h" // WIN32_OP()
-#include "../SDK/ui_element.h"
-#include "../helpers/BumpableElem.h"
-#include "../../libPPUI/CDialogResizeHelper.h"
-#include "resource.h"
 #include "freeverb.h"
 #include "dsp_guids.h"
 
-namespace {
+#ifdef _WIN32
+#include "../ATLHelpers/ATLHelpers.h"
+#endif
 
+#ifdef FOOBAR2000_MOBILE
+#include <SDK/foobar2000-dsp.h>
+#include <SDK/dsp-frontend.h>
+void dsp_freeverb_configure(fb2k::dspConfigContext_t, dsp_preset_edit_callback_v3::ptr);
+static void dsp_freeverb_configure_wrap(fb2k::dspConfigContext_t, dsp_preset_edit_callback_v2::ptr);
+#endif
+
+namespace {
+#ifdef _WIN32
 	class CEditMod : public CWindowImpl<CEditMod, CEdit >
 	{
 	public:
@@ -41,6 +45,7 @@ namespace {
 	};
 
 	static void RunDSPConfigPopup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback);
+#endif // _WIN32
 	class dsp_freeverb : public dsp_impl_base
 	{
 		int m_rate, m_ch, m_ch_mask;
@@ -122,10 +127,18 @@ namespace {
 			make_preset(0.43, 0.57, 0.45, 0.56, 0.56, true, p_out);
 			return true;
 		}
+
+#ifdef _WIN32
 		static void g_show_config_popup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
 		{
 			::RunDSPConfigPopup(p_data, p_parent, p_callback);
 		}
+#endif // _WIN32
+#ifdef FOOBAR2000_MOBILE
+        static void g_show_config_popup( fb2k::dspConfigContext_t parent, dsp_preset_edit_callback_v2::ptr callback) {
+            dsp_freeverb_configure_wrap(parent, callback);
+        }
+#endif // FOOBAR2000_MOBILE
 		static bool g_have_config_popup() { return true; }
 		static void make_preset(float drytime, float wettime, float dampness, float roomwidth, float roomsize, bool enabled, dsp_preset & out)
 		{
@@ -150,11 +163,12 @@ namespace {
 				parser >> roomsize;
 				parser >> enabled;
 			}
-			catch (exception_io_data) { drytime = 0.43; wettime = 0.57; dampness = 0.45; roomwidth = 0.56; roomsize = 0.56; enabled = true; }
+			catch (exception_io_data const &) { drytime = 0.43; wettime = 0.57; dampness = 0.45; roomwidth = 0.56; roomsize = 0.56; enabled = true; }
 		}
 	};
 
-	// {1DC17CA0-0023-4266-AD59-691D566AC291}
+#ifdef _WIN32
+    // {1DC17CA0-0023-4266-AD59-691D566AC291}
 	static const GUID guid_choruselem =
 	{ 0x9afc1e0, 0xe9bb, 0x487b,{ 0x9b, 0xd8, 0x11, 0x3f, 0x29, 0x48, 0x8a, 0x90 } };
 
@@ -834,7 +848,80 @@ namespace {
 		CMyDSPPopupReverb popup(p_data, p_callback);
 		if (popup.DoModal(p_parent) != IDOK) p_callback.on_preset_changed(p_data);
 	}
-
+#endif // _WIN32
 	static dsp_factory_t<dsp_freeverb> g_dsp_reverb_factory;
-
 }
+#ifdef FOOBAR2000_MOBILE
+namespace {
+    class keyValueConfig_freeverb : public dsp_preset_edit_callback_v3 {
+        const dsp_preset_edit_callback_v2::ptr m_chain;
+
+        float drytime = 0, wettime = 0, dampness = 0, roomwidth = 0, roomsize = 0;
+        bool enabled = true;
+        void set_preset( dsp_preset const & in) {
+            dsp_freeverb::parse_preset(drytime,wettime, dampness, roomwidth, roomsize, enabled, in);
+        }
+        static fb2k::stringRef getThis( const float & v ) {
+            return fb2k::makeString(pfc::format_int( pfc::rint32(v*100)));
+        }
+        static fb2k::stringRef getThis( const bool & v ) {
+            return fb2k::makeString(v?"1":"0");
+        }
+        static void putThis(float & f, const char * v) {
+            f = atoi(v) / 100.0f;
+        }
+        static void putThis(bool & b, const char * v) {
+            b = strcmp(v, "0") != 0;
+        }
+
+
+        float * find_val( const char * arg) {
+            if ( strcmp(arg, "drytime") == 0 ) return &drytime;
+            if ( strcmp(arg, "wettime") == 0 ) return &wettime;
+            if ( strcmp(arg, "dampness") == 0 ) return &dampness;
+            if ( strcmp(arg, "roomwidth") == 0 ) return &roomwidth;
+            if ( strcmp(arg, "roomsize") == 0) return &roomsize;
+            return nullptr;
+        }
+
+
+    public:
+        keyValueConfig_freeverb( dsp_preset_edit_callback_v2::ptr chain ) : m_chain(chain) {
+            dsp_preset_impl temp;
+            chain->get_preset(temp);
+            this->set_preset( temp );
+        }
+
+
+
+        fb2k::stringRef get(const char * name) override {
+            if ( strcmp(name, "enabled") == 0 ) return getThis(enabled);
+            auto f = find_val( name );
+            if ( f ) return getThis(*f);
+            return nullptr;
+        }
+        void put(const char * name, const char * value) override {
+            if ( strcmp(name, "enabled") == 0 ) return putThis(enabled, value);
+            auto f = find_val(name);
+            if ( f ) putThis(*f, value);
+        }
+
+        void commit() override {
+            dsp_preset_impl temp;
+            dsp_freeverb::make_preset(drytime, wettime, dampness, roomwidth, roomsize, enabled, temp);
+            m_chain->set_preset( temp );
+        }
+
+        void reset() override {
+            this->set_preset( dsp_preset_impl () );
+        }
+        void dismiss(bool bOK) override {
+            m_chain->dsp_dialog_done( bOK );
+        }
+    };
+}
+
+static void dsp_freeverb_configure_wrap(fb2k::dspConfigContext_t ctx, dsp_preset_edit_callback_v2::ptr cb) {
+    dsp_freeverb_configure(ctx,fb2k::service_new<keyValueConfig_freeverb>(cb));
+}
+#endif

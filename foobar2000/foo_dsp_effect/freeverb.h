@@ -109,7 +109,7 @@ public:
 	~revmodel();
 	void mute();
 	void init(int srate,bool stereo);
-	audio_sample revmodel::processsample(audio_sample in);
+	audio_sample processsample(audio_sample in);
 	void setroomsize(float value);
 	float getroomsize();
 	void setdamp(float value);
