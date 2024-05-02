@@ -129,7 +129,7 @@ namespace {
 		{
 			dsp_preset_builder builder; builder << ms; builder << amp; builder << feedback; builder << enabled; builder.finish(g_get_guid(), out);
 		}
-		static void parse_preset(int & ms, int & amp, int & feedback, bool enabled, const dsp_preset & in)
+		static void parse_preset(int & ms, int & amp, int & feedback, bool & enabled, const dsp_preset & in)
 		{
 			try
 			{
