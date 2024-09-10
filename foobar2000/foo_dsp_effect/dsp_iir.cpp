@@ -245,7 +245,7 @@ namespace {
 				::SendMessage(w, CB_SETCURSEL, p_type, 0);
 				RefreshLabel(p_freq, p_gain, p_type);
 				dsp_preset_impl preset;
-				dsp_iir::make_preset(p_freq, p_gain, p_type, pitch2, true, preset);
+				dsp_iir::make_preset(p_freq, p_gain, p_type, p_qual, true, preset);
 				m_callback.on_preset_changed(preset);
 			}
 			

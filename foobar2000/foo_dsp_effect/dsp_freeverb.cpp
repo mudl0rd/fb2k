@@ -4,7 +4,14 @@
 #include "dsp_guids.h"
 
 #ifdef _WIN32
-#include "../ATLHelpers/ATLHelpers.h"
+#include "../helpers/foobar2000+atl.h"
+#include <coreDarkMode.h>
+#include "../../libPPUI/CDialogResizeHelper.h"
+#include "../../libPPUI/win32_utility.h"
+#include "../../libPPUI/win32_op.h" // WIN32_OP()
+#include "../SDK/ui_element.h"
+#include "../helpers/BumpableElem.h"// ui_element_impl
+#include "resource.h"
 #endif
 
 #ifdef FOOBAR2000_MOBILE
