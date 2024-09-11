@@ -66,10 +66,6 @@ namespace {
 		bool st_enabled;
 		metadb_handle_ptr current_track;
 		pfc::array_t<float>buf;
-
-		size_t in_samples_accum_, out_samples_gen_accum_;
-
-
 	private:
 		void flushchunks(bool flush)
 		{
@@ -82,7 +78,7 @@ namespace {
 				if (flush)p_soundtouch->flush();
 				float* ptr = buf.get_ptr();
 				do {
-					out_samples_gen = p_soundtouch->receiveSamples(ptr, out_samples_gen);
+					out_samples_gen = p_soundtouch->receiveSamples(ptr, flush ? 1024 : out_samples_gen);
 					samps += out_samples_gen;
 					ptr += out_samples_gen * m_ch;
 				} while (out_samples_gen != 0);
@@ -97,7 +93,6 @@ namespace {
 			p_soundtouch = 0;
 			st_enabled = false;
 			parse_preset(pitch_amount, st_enabled, in);
-			in_samples_accum_ = out_samples_gen_accum_ = 0;
 		}
 		~dsp_pitch() {
 			if (p_soundtouch)
@@ -148,9 +143,7 @@ namespace {
 			if (chunk->get_srate() != m_rate || chunk->get_channels() != m_ch || chunk->get_channel_config() != m_ch_mask)
 			{
 
-				flushchunks(false);
-
-				in_samples_accum_ = out_samples_gen_accum_ = 0;
+				flushchunks(true);
 
 				m_rate = chunk->get_srate();
 				m_ch = chunk->get_channels();
@@ -250,26 +243,25 @@ namespace {
 		pfc::array_t<float>buf;
 		metadb_handle_ptr current_track;
 	private:
-		void flushchunks()
+		void flushchunks(bool flush)
 		{
-			if (p_soundtouch)
+			if (p_soundtouch && st_enabled)
 			{
-				size_t out_samples_gen = p_soundtouch->numSamples();
-				if (out_samples_gen)
-				{
-					buf.grow_size(out_samples_gen * m_ch);
-					while (out_samples_gen > 0)
-					{
-						out_samples_gen = p_soundtouch->receiveSamples(buf.get_ptr(), out_samples_gen);
-						if (out_samples_gen != 0)
-						{
-							audio_chunk* chunk = insert_chunk(out_samples_gen * m_ch);
-							chunk->set_data_32(buf.get_ptr(), out_samples_gen, m_ch, m_rate);
-						}
-					}
-				}
-			}
 
+				int samps = 0;
+				size_t out_samples_gen = flush ? 1024 : p_soundtouch->numSamples();
+				buf.grow_size(out_samples_gen * m_ch);
+				if (flush)p_soundtouch->flush();
+				float* ptr = buf.get_ptr();
+				do {
+					out_samples_gen = p_soundtouch->receiveSamples(ptr, flush ? 1024 : out_samples_gen);
+					samps += out_samples_gen;
+					ptr += out_samples_gen * m_ch;
+				} while (out_samples_gen != 0);
+				audio_chunk* chunk = insert_chunk();
+				chunk->set_data_32(buf.get_ptr(), samps, m_ch, m_rate);
+
+			}
 		}
 
 	public:
@@ -307,12 +299,12 @@ namespace {
 
 		virtual void on_endoftrack(abort_callback& p_abort) {
 
-			flushchunks();
+			flushchunks(true);
 		}
 
 		virtual void on_endofplayback(abort_callback& p_abort) {
 			//same as flush, only at end of playback
-			flushchunks();
+			flushchunks(true);
 		}
 
 		// The framework feeds input to our DSP using this method.
@@ -337,7 +329,7 @@ namespace {
 
 			if (chunk->get_srate() != m_rate || chunk->get_channels() != m_ch || chunk->get_channel_config() != m_ch_mask)
 			{
-				flushchunks();
+				flushchunks(true);
 
 
 				m_rate = chunk->get_srate();
@@ -369,26 +361,20 @@ namespace {
 				t_size sample_count = chunk->get_sample_count();
 				if (sample_count)
 				{
-
-
-					audio_sample* current = chunk->get_data();
 #ifdef _WIN64
 
 
 					if (sample_count)
 					{
 						buf.grow_size(sample_count * m_ch);
-						audio_math::convert(current, (float*)buf.get_ptr(), sample_count * m_ch);
+						audio_math::convert(src, (float*)buf.get_ptr(), sample_count * m_ch);
 						p_soundtouch->putSamples(buf.get_ptr(), sample_count);
-						flushchunks();
 					}
 #else
 					if (sample_count)
-					{
-						p_soundtouch->putSamples(current, sample_count);
-						flushchunks();
-					}
+						p_soundtouch->putSamples(src, sample_count);
 #endif
+					flushchunks(false);
 				}
 
 			}
@@ -448,32 +434,30 @@ namespace {
 		SoundTouch* p_soundtouch;
 		int m_rate, m_ch, m_ch_mask;
 		float pitch_amount;
-		pfc::array_t<float>buffer;
+		pfc::array_t<float>buf;
 		bool st_enabled;
 		metadb_handle_ptr current_track;
 		bool gettrackdata;
 	private:
-		void flushchunks()
+		void flushchunks(bool flush)
 		{
-			if (p_soundtouch)
+			if (p_soundtouch && st_enabled)
 			{
-				size_t out_samples_gen = p_soundtouch->numSamples();
-				if (out_samples_gen)
-				{
-					buffer.grow_size(out_samples_gen * m_ch);
-					while (out_samples_gen > 0)
-					{
-						out_samples_gen = p_soundtouch->receiveSamples(buffer.get_ptr(), out_samples_gen);
-						if (out_samples_gen != 0)
-						{
-							audio_chunk* chunk = insert_chunk(out_samples_gen * m_ch);
-							chunk->set_data_32(buffer.get_ptr(), out_samples_gen, m_ch, m_rate);
-						}
-					}
-				}
+
+				int samps = 0;
+				size_t out_samples_gen = flush ? 1024 : p_soundtouch->numSamples();
+				buf.grow_size(out_samples_gen * m_ch);
+				if (flush)p_soundtouch->flush();
+				float* ptr = buf.get_ptr();
+				do {
+					out_samples_gen = p_soundtouch->receiveSamples(ptr, flush ? 1024 : out_samples_gen);
+					samps += out_samples_gen;
+					ptr += out_samples_gen * m_ch;
+				} while (out_samples_gen != 0);
+				audio_chunk* chunk = insert_chunk();
+				chunk->set_data_32(buf.get_ptr(), samps, m_ch, m_rate);
 
 			}
-
 		}
 	public:
 		dsp_rate(dsp_preset const& in) : pitch_amount(0.00), m_rate(0), m_ch(0), m_ch_mask(0)
@@ -511,14 +495,14 @@ namespace {
 		virtual void on_endoftrack(abort_callback& p_abort) {
 			// This method is called when a track ends.
 			// We need to do the same thing as flush(), so we just call it.
-			flushchunks();
+			flushchunks(true);
 
 		}
 
 		virtual void on_endofplayback(abort_callback& p_abort) {
 			// This method is called on end of playback instead of flush().
 			// We need to do the same thing as flush(), so we just call it.
-			flushchunks();
+			flushchunks(true);
 
 		}
 
@@ -540,10 +524,9 @@ namespace {
 
 			if (chunk->get_srate() != m_rate || chunk->get_channels() != m_ch || chunk->get_channel_config() != m_ch_mask)
 			{
-
 				if (p_soundtouch)
 				{
-					flushchunks();
+					flushchunks(true);
 					delete p_soundtouch;
 				}
 
@@ -566,13 +549,13 @@ namespace {
 				{
 					audio_sample* current = chunk->get_data();
 #ifdef _WIN64
-					buffer.grow_size(sample_count * m_ch);
-					audio_math::convert(current, (float*)buffer.get_ptr(), sample_count * m_ch);
-					p_soundtouch->putSamples(buffer.get_ptr(), sample_count);
-					flushchunks();
+					buf.grow_size(sample_count * m_ch);
+					audio_math::convert(current, (float*)buf.get_ptr(), sample_count * m_ch);
+					p_soundtouch->putSamples(buf.get_ptr(), sample_count);
+					flushchunks(false);
 #else
 					p_soundtouch->putSamples(current, sample_count);
-					flushchunks();
+					flushchunks(false);
 #endif
 				}
 			}
