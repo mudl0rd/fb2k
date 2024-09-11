@@ -143,7 +143,7 @@ namespace {
 			if (chunk->get_srate() != m_rate || chunk->get_channels() != m_ch || chunk->get_channel_config() != m_ch_mask)
 			{
 
-				flushchunks(true);
+				flushchunks(false);
 
 				m_rate = chunk->get_srate();
 				m_ch = chunk->get_channels();
@@ -181,7 +181,10 @@ namespace {
 				}
 #else
 				if (sample_count)
-					p_soundtouch->putSamples(current, sample_count);
+				{
+					buf.grow_size(sample_count * m_ch);
+					p_soundtouch->putSamples(src, sample_count);
+				}
 #endif
 				flushchunks(false);
 			}
@@ -329,7 +332,7 @@ namespace {
 
 			if (chunk->get_srate() != m_rate || chunk->get_channels() != m_ch || chunk->get_channel_config() != m_ch_mask)
 			{
-				flushchunks(true);
+				flushchunks(false);
 
 
 				m_rate = chunk->get_srate();
@@ -354,6 +357,7 @@ namespace {
 					p_soundtouch->setSetting(SETTING_USE_QUICKSEEK, true);
 					p_soundtouch->setSetting(SETTING_USE_AA_FILTER, useaafilter);
 				}
+				return false;
 			}
 
 			if (p_soundtouch && pitch_shifter == 0)
@@ -372,7 +376,10 @@ namespace {
 					}
 #else
 					if (sample_count)
+					{
+						buf.grow_size(sample_count * m_ch);
 						p_soundtouch->putSamples(src, sample_count);
+					}
 #endif
 					flushchunks(false);
 				}
@@ -526,7 +533,7 @@ namespace {
 			{
 				if (p_soundtouch)
 				{
-					flushchunks(true);
+					flushchunks(false);
 					delete p_soundtouch;
 				}
 
@@ -539,6 +546,7 @@ namespace {
 				p_soundtouch->setChannels(m_ch);
 				p_soundtouch->setRateChange(pitch_amount);
 				st_enabled = true;
+				return false;
 
 
 			}
@@ -552,11 +560,15 @@ namespace {
 					buf.grow_size(sample_count * m_ch);
 					audio_math::convert(current, (float*)buf.get_ptr(), sample_count * m_ch);
 					p_soundtouch->putSamples(buf.get_ptr(), sample_count);
-					flushchunks(false);
+				
 #else
-					p_soundtouch->putSamples(current, sample_count);
-					flushchunks(false);
+					if (sample_count)
+					{
+						buf.grow_size(sample_count * m_ch);
+						p_soundtouch->putSamples(current, sample_count);
+					}
 #endif
+					flushchunks(false);
 				}
 			}
 			return false;
