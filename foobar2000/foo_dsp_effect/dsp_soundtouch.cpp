@@ -71,23 +71,24 @@ namespace {
 
 
 	private:
-		void flushchunks()
+		void flushchunks(bool flush)
 		{
 			if (p_soundtouch && st_enabled)
 			{
-				while (1)
-				{
-					size_t out_samples_gen = p_soundtouch->numSamples();
-					if (!out_samples_gen) break;
-					buf.grow_size(out_samples_gen * m_ch);
-					out_samples_gen = p_soundtouch->receiveSamples(buf.get_ptr(), out_samples_gen);
-					if (out_samples_gen)
-					{
-						audio_chunk* chunk = insert_chunk();
-						chunk->set_data_32(buf.get_ptr(), out_samples_gen, m_ch, m_rate);
-					}
 
-				}
+				int samps = 0;
+				size_t out_samples_gen = flush ? 1024 : p_soundtouch->numSamples();
+				buf.grow_size(out_samples_gen * m_ch);
+				if (flush)p_soundtouch->flush();
+				float* ptr = buf.get_ptr();
+				do {
+					out_samples_gen = p_soundtouch->receiveSamples(ptr, out_samples_gen);
+					samps += out_samples_gen;
+					ptr += out_samples_gen * m_ch;
+				} while (out_samples_gen != 0);
+				audio_chunk* chunk = insert_chunk();
+				chunk->set_data_32(buf.get_ptr(), samps, m_ch, m_rate);
+
 			}
 		}
 	public:
@@ -120,13 +121,13 @@ namespace {
 		}
 
 		virtual void on_endoftrack(abort_callback& p_abort) {
-			flushchunks();
+			flushchunks(true);
 
 		}
 
 		virtual void on_endofplayback(abort_callback& p_abort) {
 			//same as flush, only at end of playback
-			flushchunks();
+			flushchunks(true);
 		}
 
 		// The framework feeds input to our DSP using this method.
@@ -146,7 +147,8 @@ namespace {
 
 			if (chunk->get_srate() != m_rate || chunk->get_channels() != m_ch || chunk->get_channel_config() != m_ch_mask)
 			{
-				flushchunks();
+
+				flushchunks(false);
 
 				in_samples_accum_ = out_samples_gen_accum_ = 0;
 
@@ -180,7 +182,7 @@ namespace {
 
 				if (sample_count)
 				{
-					buf.grow_size(sample_count*m_ch);
+					buf.grow_size(sample_count * m_ch);
 					audio_math::convert(src, (float*)buf.get_ptr(), sample_count * m_ch);
 					p_soundtouch->putSamples(buf.get_ptr(), sample_count);
 				}
@@ -188,7 +190,7 @@ namespace {
 				if (sample_count)
 					p_soundtouch->putSamples(current, sample_count);
 #endif
-				flushchunks();
+				flushchunks(false);
 			}
 			return false;
 		}
@@ -200,8 +202,8 @@ namespace {
 			m_ch_mask = 0;
 		}
 
-		virtual double get_latency() {;
-			return  0.0;
+		virtual double get_latency() {
+			return 0.0;
 		}
 
 
