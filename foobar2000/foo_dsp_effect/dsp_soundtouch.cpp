@@ -560,7 +560,7 @@ namespace {
 					buf.grow_size(sample_count * m_ch);
 					audio_math::convert(current, (float*)buf.get_ptr(), sample_count * m_ch);
 					p_soundtouch->putSamples(buf.get_ptr(), sample_count);
-				
+
 #else
 					if (sample_count)
 					{

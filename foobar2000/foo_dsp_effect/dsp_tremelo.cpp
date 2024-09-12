@@ -45,7 +45,7 @@ namespace {
 	private:
 		float freq;
 		float depth;
-		audio_sample *table;
+		audio_sample* table;
 		int index;
 		int maxindex;
 	public:
@@ -78,7 +78,7 @@ namespace {
 			return in * table[index++];
 		}
 	};
-	static void RunConfigPopup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback);
+	static void RunConfigPopup(const dsp_preset& p_data, HWND p_parent, dsp_preset_edit_callback& p_callback);
 	class dsp_tremelo : public dsp_impl_base
 	{
 		int m_rate, m_ch, m_ch_mask;
@@ -86,7 +86,7 @@ namespace {
 		bool enabled;
 		pfc::array_t<Tremelo> m_buffers;
 	public:
-		dsp_tremelo(dsp_preset const & in) :m_rate(0), m_ch(0), m_ch_mask(0) {
+		dsp_tremelo(dsp_preset const& in) :m_rate(0), m_ch(0), m_ch_mask(0) {
 			// Mark buffer as empty.
 			freq = 4.0;
 			depth = 0.9;
@@ -103,16 +103,16 @@ namespace {
 		// The name we use here does not describe what the DSP does,
 		// so it would be a bad name. We can excuse this, because it
 		// doesn't do anything useful anyway.
-		static void g_get_name(pfc::string_base & p_out) {
+		static void g_get_name(pfc::string_base& p_out) {
 			p_out = "Tremolo";
 		}
 
-		virtual void on_endoftrack(abort_callback & p_abort) {
+		virtual void on_endoftrack(abort_callback& p_abort) {
 			// This method is called when a track ends.
 			// We need to do the same thing as flush(), so we just call it.
 		}
 
-		virtual void on_endofplayback(abort_callback & p_abort) {
+		virtual void on_endofplayback(abort_callback& p_abort) {
 			// This method is called on end of playback instead of flush().
 			// We need to do the same thing as flush(), so we just call it.
 		}
@@ -121,7 +121,7 @@ namespace {
 		// Each chunk contains a number of samples with the same
 		// stream characteristics, i.e. same sample rate, channel count
 		// and channel configuration.
-		virtual bool on_chunk(audio_chunk * chunk, abort_callback & p_abort) {
+		virtual bool on_chunk(audio_chunk* chunk, abort_callback& p_abort) {
 			if (chunk->get_srate() != m_rate || chunk->get_channels() != m_ch || chunk->get_channel_config() != m_ch_mask)
 			{
 				m_rate = chunk->get_srate();
@@ -131,15 +131,15 @@ namespace {
 				m_buffers.set_count(m_ch);
 				for (unsigned i = 0; i < m_ch; i++)
 				{
-					Tremelo & e = m_buffers[i];
+					Tremelo& e = m_buffers[i];
 					e.init(freq, depth, m_rate);
 				}
 			}
 
 			for (unsigned i = 0; i < m_ch; i++)
 			{
-				Tremelo & e = m_buffers[i];
-				audio_sample * data = chunk->get_data() + i;
+				Tremelo& e = m_buffers[i];
+				audio_sample* data = chunk->get_data() + i;
 				for (unsigned j = 0, k = chunk->get_sample_count(); j < k; j++)
 				{
 					*data = e.Process(*data);
@@ -185,17 +185,17 @@ namespace {
 			// Delayed signal:   01234567  abcdefgh
 			return false;
 		}
-		static bool g_get_default_preset(dsp_preset & p_out)
+		static bool g_get_default_preset(dsp_preset& p_out)
 		{
 			make_preset(2., 0.5, true, p_out);
 			return true;
 		}
-		static void g_show_config_popup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
+		static void g_show_config_popup(const dsp_preset& p_data, HWND p_parent, dsp_preset_edit_callback& p_callback)
 		{
 			::RunConfigPopup(p_data, p_parent, p_callback);
 		}
 		static bool g_have_config_popup() { return true; }
-		static void make_preset(float freq, float depth, bool enabled, dsp_preset & out)
+		static void make_preset(float freq, float depth, bool enabled, dsp_preset& out)
 		{
 			dsp_preset_builder builder;
 			builder << freq;
@@ -203,7 +203,7 @@ namespace {
 			builder << enabled;
 			builder.finish(g_get_guid(), out);
 		}
-		static void parse_preset(float & freq, float & depth, bool & enabled, const dsp_preset & in)
+		static void parse_preset(float& freq, float& depth, bool& enabled, const dsp_preset& in)
 		{
 			try
 			{
@@ -219,7 +219,7 @@ namespace {
 	class CMyDSPPopupTremelo : public CDialogImpl<CMyDSPPopupTremelo>
 	{
 	public:
-		CMyDSPPopupTremelo(const dsp_preset & initData, dsp_preset_edit_callback & callback) : m_initData(initData), m_callback(callback) { }
+		CMyDSPPopupTremelo(const dsp_preset& initData, dsp_preset_edit_callback& callback) : m_initData(initData), m_callback(callback) { }
 		enum { IDD = IDD_TREMELO };
 		enum
 		{
@@ -285,7 +285,7 @@ namespace {
 			if (preset_changed)
 			{
 				dsp_preset_impl preset;
-				dsp_tremelo::make_preset(freq, depth,true, preset);
+				dsp_tremelo::make_preset(freq, depth, true, preset);
 				m_callback.on_preset_changed(preset);
 				slider_freq.SetPos((double)(100 * freq));
 				slider_depth.SetPos((double)(100 * depth));
@@ -350,8 +350,8 @@ namespace {
 			depth_edit.SetWindowText(sWindowText);
 		}
 
-		const dsp_preset & m_initData; // modal dialog so we can reference this caller-owned object.
-		dsp_preset_edit_callback & m_callback;
+		const dsp_preset& m_initData; // modal dialog so we can reference this caller-owned object.
+		dsp_preset_edit_callback& m_callback;
 		float freq; //0.1 - 4.0
 		float depth;  //0 - 360
 		CEditMod freq_edit, depth_edit;
@@ -359,7 +359,7 @@ namespace {
 		CTrackBarCtrl slider_freq, slider_depth;
 	};
 
-	static void RunConfigPopup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
+	static void RunConfigPopup(const dsp_preset& p_data, HWND p_parent, dsp_preset_edit_callback& p_callback)
 	{
 		CMyDSPPopupTremelo popup(p_data, p_callback);
 		if (popup.DoModal(p_parent) != IDOK) p_callback.on_preset_changed(p_data);
@@ -441,11 +441,11 @@ namespace {
 		static GUID g_get_guid() {
 			return guid_choruselem;
 		}
-		static void g_get_name(pfc::string_base & out) { out = "Tremolo"; }
+		static void g_get_name(pfc::string_base& out) { out = "Tremolo"; }
 		static ui_element_config::ptr g_get_default_configuration() {
 			return makeConfig(true);
 		}
-		static const char * g_get_description() { return "Modifies the 'Tremolo' DSP effect."; }
+		static const char* g_get_description() { return "Modifies the 'Tremolo' DSP effect."; }
 		static GUID g_get_subclass() {
 			return ui_element_subclass_dsp;
 		}
@@ -519,7 +519,7 @@ namespace {
 				OnConfigChanged();
 				SetConfig();
 			}
-				
+
 		}
 
 		fb2k::CCoreDarkModeHooks m_hooks;
@@ -577,7 +577,7 @@ namespace {
 			}
 		}
 
-		void DSPConfigChange(dsp_chain_config const & cfg)
+		void DSPConfigChange(dsp_chain_config const& cfg)
 		{
 			if (!m_ownEchoUpdate && m_hWnd != NULL) {
 				ApplySettings();
@@ -656,12 +656,12 @@ namespace {
 		{
 			CString sWindowText;
 			pfc::string_formatter msg;
-			msg << pfc::format_float(freq,0,2);
+			msg << pfc::format_float(freq, 0, 2);
 			sWindowText = msg.c_str();
 			freq_s = sWindowText;
 			freq_edit.SetWindowText(sWindowText);
 			msg.reset();
-			msg << pfc::format_int(depth*100);
+			msg << pfc::format_int(depth * 100);
 			sWindowText = msg.c_str();
 			depth_s = sWindowText;
 			depth_edit.SetWindowText(sWindowText);
@@ -701,13 +701,13 @@ namespace {
 	};
 
 	class myElem_t : public  ui_element_impl_withpopup< uielem_tremolo > {
-		bool get_element_group(pfc::string_base & p_out)
+		bool get_element_group(pfc::string_base& p_out)
 		{
 			p_out = "Effect DSP";
 			return true;
 		}
 
-		bool get_menu_command_description(pfc::string_base & out) {
+		bool get_menu_command_description(pfc::string_base& out) {
 			out = "Opens a window for amplitude modulation control.";
 			return true;
 		}
