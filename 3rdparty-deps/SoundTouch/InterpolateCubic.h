@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-/// 
+///
 /// Cubic interpolation routine.
 ///
 /// Author        : Copyright (c) Olli Parviainen
@@ -41,21 +41,27 @@ namespace soundtouch
 class InterpolateCubic : public TransposerBase
 {
 protected:
-    virtual void resetRegisters();
-    virtual int transposeMono(SAMPLETYPE *dest, 
-                        const SAMPLETYPE *src, 
-                        int &srcSamples);
-    virtual int transposeStereo(SAMPLETYPE *dest, 
-                        const SAMPLETYPE *src, 
-                        int &srcSamples);
-    virtual int transposeMulti(SAMPLETYPE *dest, 
-                        const SAMPLETYPE *src, 
-                        int &srcSamples);
+    virtual int transposeMono(SAMPLETYPE *dest,
+                        const SAMPLETYPE *src,
+                        int &srcSamples) override;
+    virtual int transposeStereo(SAMPLETYPE *dest,
+                        const SAMPLETYPE *src,
+                        int &srcSamples) override;
+    virtual int transposeMulti(SAMPLETYPE *dest,
+                        const SAMPLETYPE *src,
+                        int &srcSamples) override;
 
     double fract;
 
 public:
     InterpolateCubic();
+
+    virtual void resetRegisters() override;
+
+    virtual int getLatency() const override
+    {
+        return 1;
+    }
 };
 
 }

@@ -73,12 +73,11 @@ namespace {
 			{
 
 				int samps = 0;
-				size_t out_samples_gen = flush ? 1024 : p_soundtouch->numSamples();
+				size_t out_samples_gen =p_soundtouch->numSamples();
 				buf.grow_size(out_samples_gen * m_ch);
-				if (flush)p_soundtouch->flush();
 				float* ptr = buf.get_ptr();
 				do {
-					out_samples_gen = p_soundtouch->receiveSamples(ptr, flush ? 1024 : out_samples_gen);
+					out_samples_gen = p_soundtouch->receiveSamples(ptr,out_samples_gen);
 					samps += out_samples_gen;
 					ptr += out_samples_gen * m_ch;
 				} while (out_samples_gen != 0);
@@ -252,12 +251,11 @@ namespace {
 			{
 
 				int samps = 0;
-				size_t out_samples_gen = flush ? 1024 : p_soundtouch->numSamples();
+				size_t out_samples_gen = p_soundtouch->numSamples();
 				buf.grow_size(out_samples_gen * m_ch);
-				if (flush)p_soundtouch->flush();
 				float* ptr = buf.get_ptr();
 				do {
-					out_samples_gen = p_soundtouch->receiveSamples(ptr, flush ? 1024 : out_samples_gen);
+					out_samples_gen = p_soundtouch->receiveSamples(ptr, out_samples_gen);
 					samps += out_samples_gen;
 					ptr += out_samples_gen * m_ch;
 				} while (out_samples_gen != 0);
@@ -452,12 +450,11 @@ namespace {
 			{
 
 				int samps = 0;
-				size_t out_samples_gen = flush ? 1024 : p_soundtouch->numSamples();
+				size_t out_samples_gen = p_soundtouch->numSamples();
 				buf.grow_size(out_samples_gen * m_ch);
-				if (flush)p_soundtouch->flush();
 				float* ptr = buf.get_ptr();
 				do {
-					out_samples_gen = p_soundtouch->receiveSamples(ptr, flush ? 1024 : out_samples_gen);
+					out_samples_gen = p_soundtouch->receiveSamples(ptr, out_samples_gen);
 					samps += out_samples_gen;
 					ptr += out_samples_gen * m_ch;
 				} while (out_samples_gen != 0);
@@ -1174,7 +1171,7 @@ namespace {
 	// 1,1,1,1 means that the control is aligned to bottom+right but doesn't resize
 	// 0,0,1,0 means that the control disregards vertical resize (aligned to top) and changes its width with the dialog
 	};
-	static const CRect resizeMinMax(200, 120, 1000, 1000);
+	static const CRect resizeMinMax(200, 150, 1000, 1000);
 
 
 
@@ -1239,7 +1236,7 @@ namespace {
 
 
 			ret.m_min_width = MulDiv(200, DPI.cx, 96);
-			ret.m_min_height = MulDiv(120, DPI.cy, 96);
+			ret.m_min_height = MulDiv(150, DPI.cy, 96);
 			ret.m_max_width = MulDiv(1000, DPI.cx, 96);
 			ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
@@ -1558,7 +1555,7 @@ namespace {
 
 
 			ret.m_min_width = MulDiv(200, DPI.cx, 96);
-			ret.m_min_height = MulDiv(120, DPI.cy, 96);
+			ret.m_min_height = MulDiv(150, DPI.cy, 96);
 			ret.m_max_width = MulDiv(1000, DPI.cx, 96);
 			ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
@@ -1871,7 +1868,7 @@ namespace {
 
 
 			ret.m_min_width = MulDiv(200, DPI.cx, 96);
-			ret.m_min_height = MulDiv(120, DPI.cy, 96);
+			ret.m_min_height = MulDiv(150, DPI.cy, 96);
 			ret.m_max_width = MulDiv(1000, DPI.cx, 96);
 			ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
